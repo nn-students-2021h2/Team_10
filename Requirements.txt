@@ -1,0 +1,6 @@
+Pillow==8.4.0
+docx2pdf==0.1.8
+PyPDF2==1.26.0
+python-telegram-bot==13.9
+
+poppler (Указать к нему путь в функции pdf_to_jpg)
