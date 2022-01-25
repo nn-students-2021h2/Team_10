@@ -172,7 +172,7 @@ def split_pdf(path_to_file, split_borders):
     for split_item in split_borders:
         split_item[:] = [1 if x == 'b' else x for x in split_item]
         split_item[:] = [max_pages if x == 'e' else x for x in split_item]
-
+        split_item[:] = [max_pages if x > max_pages else x for x in split_item]
         b = split_item[0]-1
         e = split_item[1]-1
         if b >= 0 and b < max_pages and e >= 0 and e < max_pages:
@@ -240,12 +240,7 @@ def docx_to_pdf(path_to_file):
 
 
 def main():
-    #jpg_to_pdf("C:\PythonCode\PDF_bot",A4=True)
-    #pdf_to_jpg(r"C:/PythonCode/PDF_bot/out4.pdf", r"C:/PythonCode/PDF_bot/")
-
-   #pdf_merge(r"C:\PythonCode\PDF_bot",)
-    split_brd=[['e', 'b'], ['b', 4], [7, 9], [9, 6], [9, 13]]
-    split_pdf(r"C:\PythonCode\NastyaBot\olyn_report/2_5345847889551693557.pdf", split_brd)
+    pass
 
 
 if __name__ == '__main__':
