@@ -1,5 +1,5 @@
 from pdf_operations import *
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
 from telegram import ReplyKeyboardMarkup, Update, ReplyKeyboardRemove
 from telegram.ext import (
@@ -10,16 +10,17 @@ from telegram.ext import (
     ConversationHandler,
     CallbackContext,
 )
+import os
 
-TOKEN = ''
+TOKEN = '5046711003:AAHBmOYkvC4bgrGlcnzPtXSvg8I3jzc2ROQ'
 
 # U+1F3E0	\xF0\x9F\x8F\xA0
 # house=\xF0\x9F\x8F\xA0
 
-arrow = 'back ⬅'
-house = 'home 🏠'
-apply = 'apply ✅'
-reset = 'reset 🔃'
+arrow = '⬅ back'
+house = '🏠 home'
+apply = '✅ apply'
+reset = '🔃 reset '
 
 
 # house='🔝'
@@ -42,10 +43,10 @@ edit_keyboard = [
 ]
 
 reset_apply_keyboard = [
-    [arrow], [house], [reset], [apply]
+    [apply], [reset], [arrow, house],
 ]
 
-back_keyboard = [[arrow], [house]]
+back_keyboard = [[arrow, house]]
 
 markup_main = ReplyKeyboardMarkup(main_keyboard, one_time_keyboard=True)
 markup_convert = ReplyKeyboardMarkup(convert_keyboard, one_time_keyboard=True)
@@ -202,11 +203,17 @@ def jpg2pdf_fun_app(update: Update, context: CallbackContext):  # WorkWithFiles
 
     if file_list is not None:
         count = 0
+
+        # Создай папку с id чата и храни все там
+        folder_name = str(chat_id)
+        if os.path.exists(folder_name) is False:
+            os.mkdir(folder_name)
+
         for item in file_list:
             file_name = str(chat_id) + '_jpg2pdf_' + str(count) + '.jpg'
             count = count + 1
-            item.download(file_name)
-            jpg_file = Image.open(file_name)
+            item.download(folder_name + '/' + file_name)
+            jpg_file = Image.open(folder_name + '/' + file_name)
             jpg_files.append(jpg_file)
         print(jpg_files)
         pdf_file = jpg_to_pdf(jpg_files, A4=False, chat_id=chat_id)
@@ -232,11 +239,17 @@ def jpg2pdfA4_fun_app(update: Update, context: CallbackContext):  # WorkWithFile
 
     if file_list is not None:
         count = 0
+
+        # Создай папку с id чата и храни все там
+        folder_name = str(chat_id)
+        if os.path.exists(folder_name) is False:
+            os.mkdir(folder_name)
+
         for item in file_list:
             file_name = str(chat_id) + '_jpg2pdf_' + str(count) + '.jpg'
             count = count + 1
-            item.download(file_name)
-            jpg_file = Image.open(file_name)
+            item.download(folder_name + '/' + file_name)
+            jpg_file = Image.open(folder_name + '/' + file_name)
             jpg_files.append(jpg_file)
         print(jpg_files)
         pdf_file = jpg_to_pdf(jpg_files, A4=True, chat_id=chat_id)
@@ -246,11 +259,8 @@ def jpg2pdfA4_fun_app(update: Update, context: CallbackContext):  # WorkWithFile
         # Отправляем
         update.message.reply_document(pdf_file, reply_markup=markup_res_app)
 
-
     else:
         update.message.reply_text('Ты же ничего не залил')
-
-    pass
 
 
 def jpg2pdf_fun_res(update: Update, context: CallbackContext):  # WorkWithFiles
@@ -270,7 +280,14 @@ def jpg2pdf_fun_res(update: Update, context: CallbackContext):  # WorkWithFiles
 def doc2pdf_fun(update: Update, context: CallbackContext):
     file = context.bot.getFile(update.message.document.file_id)
     print(file)
-    file_name = update.message.document.file_name
+
+    chat_id = update.message.chat_id
+    folder_name = str(chat_id)
+    if os.path.exists(folder_name) is False:
+        os.mkdir(folder_name)
+
+    file_name = folder_name + "/doc2pdf_" + update.message.document.file_name
+
     print(file_name)
     file.download(file_name)
     new_f_n = file_name.replace('.docx', '.pdf')
@@ -291,8 +308,16 @@ def doc2pdf_fun(update: Update, context: CallbackContext):
 def pdf2jpg_fun(update: Update, context: CallbackContext):
     file = context.bot.getFile(update.message.document.file_id)
     print(file)
-    file.download('gettted.pdf')
-    jgp_files = pdf_to_jpg('gettted.pdf', '')
+
+    chat_id = update.message.chat_id
+    folder_name = str(chat_id)
+    if os.path.exists(folder_name) is False:
+        os.mkdir(folder_name)
+
+    file_name = folder_name + "/pdf2jpg_" + update.message.document.file_name
+
+    file.download(file_name)
+    jgp_files = pdf_to_jpg(file_name, folder_name, update.message.document.file_name)
     for photo in jgp_files:
         update.message.reply_document(photo, reply_markup=markup_back)
 
@@ -327,16 +352,20 @@ def merge_fun_app(update: Update, context: CallbackContext):
     pdf_files = PdfFileMerger()
 
     if file_list is not None:
+        folder_name = str(chat_id)
+        if os.path.exists(folder_name) is False:
+            os.mkdir(folder_name)
+
         count = 0
         for item in file_list:
-            file_name = str(chat_id) + 'to_merge_pdf_' + str(count) + '.pdf'
+            file_name = folder_name + "/to_merge_pdf_" + str(count) + '.pdf'
             count = count + 1
             item.download(file_name)
             pdf_file = PdfFileReader(file_name)
             print(file_name)
             pdf_files.append(pdf_file, import_bookmarks=False)
         print(pdf_files)
-        out_name = str(chat_id) + 'to_merge_pdf_out.pdf'
+        out_name = folder_name + '/merged.pdf'
         with open(out_name, "wb") as output_stream:
             pdf_files.write(output_stream)
         to_send = open(out_name, 'rb')
@@ -421,16 +450,20 @@ def split_fun_sec(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     file_to_split = f_split_pdf_dict[chat_id]
 
-    file_name = str(chat_id) + '_to_split.pdf'
-    file_to_split.download(file_name)
+    folder_name = str(chat_id)
+    if os.path.exists(folder_name) is False:
+        os.mkdir(folder_name)
 
-    pdf_files = split_pdf(file_name, command_list)
+    all_name = folder_name + '/to_split.pdf'
+    file_to_split.download(all_name)
+
+    pdf_files = split_pdf(all_name, command_list, folder_name)
     for pdf_file in pdf_files:
         update.message.reply_document(pdf_file, reply_markup=markup_back)
     return IN_SPLIT_SEC
 
 
-f_rrename_pdf_dict = {}
+f_rename_pdf_dict = {}
 
 
 def rename_fun_frs(update: Update, context: CallbackContext):
@@ -438,7 +471,7 @@ def rename_fun_frs(update: Update, context: CallbackContext):
     print('pdf get', file)
 
     chat_id = update.message.chat_id
-    f_split_pdf_dict[chat_id] = file
+    f_rename_pdf_dict[chat_id] = file
 
     update.message.reply_text('Write new name', reply_markup=markup_back)
     return IN_RENAME_SEC
@@ -455,11 +488,14 @@ def rename_fun_sec(update: Update, context: CallbackContext):
     text.replace('.pdf', '')
     text = text + '.pdf'
     chat_id = update.message.chat_id
-    file_to_split = f_split_pdf_dict[chat_id]
+    file_to_rename = f_rename_pdf_dict[chat_id]
 
-    file_name = str(chat_id) + '_to_split.pdf'
-    file_to_split.download(text)
-    pdf_file = open(text, 'rb')
+    folder_name = str(chat_id)
+    if os.path.exists(folder_name) is False:
+        os.mkdir(folder_name)
+
+    file_to_rename.download(folder_name + "/" + text)
+    pdf_file = open(folder_name + "/" + text, 'rb')
     update.message.reply_document(pdf_file, reply_markup=markup_back)
     return IN_RENAME_SEC
 
