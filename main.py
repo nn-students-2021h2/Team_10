@@ -11,8 +11,9 @@ from telegram.ext import (
     CallbackContext,
 )
 import os
+import sys
 
-TOKEN = '5046711003:AAHBmOYkvC4bgrGlcnzPtXSvg8I3jzc2ROQ'
+TOKEN=sys.argv[1]
 
 # U+1F3E0	\xF0\x9F\x8F\xA0
 # house=\xF0\x9F\x8F\xA0
